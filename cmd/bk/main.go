@@ -303,14 +303,23 @@ func run(args []string, exit func(int)) {
 	// --------------------------
 	// docs command
 
-	docsCmd := app.Command("docs", "Obtain help from the Buildkite docs powered by")
+	docsCmd := app.Command("docs", "Obtain help from the Buildkite docs powered by Relevance AI")
 	docsCmdCtx := cli.DocsCommandContext{}
 
 	docsCmd.
+		Command("site", "Query the Buildkite site for information").
 		Action(func(c *kingpin.ParseContext) error {
 			docsCmdCtx.Debug = debug
 			docsCmdCtx.TerminalContext = &cli.Terminal{}
-			return cli.DocsHelp(docsCmdCtx)
+			return cli.GetDocsHelp(docsCmdCtx)
+		})
+
+	docsCmd.
+		Command("forum", "Query the Buildkite forum for information").
+		Action(func(c *kingpin.ParseContext) error {
+			docsCmdCtx.Debug = debug
+			docsCmdCtx.TerminalContext = &cli.Terminal{}
+			return cli.GetForumHelp(docsCmdCtx)
 		})
 
 	docsCmd.

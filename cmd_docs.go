@@ -55,7 +55,7 @@ type Credit struct {
 	NumUnits    float64 `json:"num_units,omitempty"`
 }
 
-func DocsHelp(ctx DocsCommandContext) error {
+func GetDocsHelp(ctx DocsCommandContext) error {
 
 	// Enable debug if the --debug flag is enabled
 	if ctx.Debug {
@@ -129,5 +129,12 @@ func DocsHelp(ctx DocsCommandContext) error {
 	fmt.Print(out)
 	fmt.Print("> ")	
 	
+	return nil
+}
+
+func GetForumHelp(ctx DocsCommandContext) error {
+
+	fmt.Printf("TBD")
+
 	return nil
 }
