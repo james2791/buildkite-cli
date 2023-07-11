@@ -31,12 +31,3 @@ steps:
           - RELEVANCE_PROJECT
     artifact_paths:
       - "build/*"
-  - block: Release?
-  - label: 🚀 Release BK CLI
-    command: ".buildkite/steps/release.sh"
-    plugins:
-      - ecr#v2.3.0:
-          account-ids: "502722253770"
-          login: true
-      - docker-compose#v2.2.0:
-          run: go
