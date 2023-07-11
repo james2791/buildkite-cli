@@ -2,9 +2,8 @@ name: goreleaser
 
 on:
   push:
-    # run only against tags
     tags:
-      - '*'
+      - 'v*'
 
 permissions:
   contents: write
@@ -15,14 +14,17 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - run: git fetch --force --tags
-      - uses: actions/setup-go@v4
+      - name: Set Up Go 🔧
+        uses: actions/setup-go@v4
         with:
           go-version: stable
-      - uses: goreleaser/goreleaser-action@v4
+      - name: Release Binaries 🤖
+        uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
           version: latest
