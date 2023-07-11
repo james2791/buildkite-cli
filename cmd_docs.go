@@ -13,6 +13,9 @@ import (
 	"github.com/buildkite/cli/v2/local"
 )
 
+var projectUUID string
+var apiEndpoint string
+
 type DocsCommandContext struct {
 	TerminalContext
 	ConfigContext
@@ -33,33 +36,11 @@ type question struct {
 
 
 type response struct {
-	Status    string    `json:"status"`
-	Errors    []string  `json:"errors"`
 	Output    output    `json:"output"`
-	Credits   []credit  `json:"credits_used"`
-	ExecTime  int       `json:"executionTime"`
-	Cost      float64   `json:"cost"`
 }
 
 type output struct {
-	Answer            answer   `json:"answer"`
-	Prompt            string   `json:"prompt"`
-	UserKeyUsed       bool     `json:"user_key_used"`
-	ValidationHistory []string `json:"validation_history"`
-	CreditsCost       float64  `json:"credits_cost"`
-}
-
-type answer struct {
-	Answer     string   `json:"answer,omitempty"`
-	References []string `json:"references,omitempty"`
-}
-
-
-type credit struct {
-	Credits     float64 `json:"credits"`
-	Name        string  `json:"name"`
-	Multiplier  float64 `json:"multiplier,omitempty"`
-	NumUnits    float64 `json:"num_units,omitempty"`
+	Answer            string   `json:"answer"`
 }
 
 func DocsHelp(ctx DocsCommandContext) error {
@@ -72,14 +53,11 @@ func DocsHelp(ctx DocsCommandContext) error {
 	// Obtain prompt, setup Project, URL, Payload
 	prompt := ctx.Prompt
 	//Check for Project and API URL, fail if no value set
-	project, exists := os.LookupEnv("RELEVANCE_PROJECT")
-	if !exists {
-		log.Errorf("🚨 Error: RELEVANCE_PROJECT is not set")
+	if project, exists := os.LookupEnv("RELEVANCE_PROJECT"); exists {
+		projectUUID = project
 	}
-	url, exists := os.LookupEnv("RELEVANCE_API_URL")
-	if !exists {
-		log.Errorf("🚨 Error: RELEVANCE_URL is not set")
-		return nil
+	if url, exists := os.LookupEnv("RELEVANCE_API_URL"); exists {
+		apiEndpoint = url
 	}
 
 	// we just want to send an empty string for chat history right now to use the chain
@@ -87,20 +65,19 @@ func DocsHelp(ctx DocsCommandContext) error {
 		Params: question{
 			Question: prompt,
 			ChatHistory: []string{
-				"",
 			},
 		},
-		Project: project,
+		Project: projectUUID,
 	}
 
 
-	debugf("Are we sending the question properly?\n %s \n what about the payload:\n %v", payload.Params.Question, payload)
 	payloadBytes, err := json.Marshal(payload)
+	debugf("Are we sending the question properly?\n %s \n what about the payload:\n %s", payload.Params.Question, payloadBytes)
 	if err != nil {
 		log.Errorf("🚨 Error %v", err)
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		log.Errorf("🚨 Error %v", err)
 	}
@@ -114,12 +91,13 @@ func DocsHelp(ctx DocsCommandContext) error {
 	if err != nil {
 		log.Errorf("🚨 Error %v", err)
 	}
-	debugf("Obtained response %v", resp.Body)
 
 	defer resp.Body.Close()
 
 	debugf("Attempting to read response bytes from Relevance AI")
 	responseBytes, err := ioutil.ReadAll(resp.Body)
+	debugf("Status code %s", resp.Status)
+	debugf("Obtained response %s", responseBytes)
 	if err != nil {
 		log.Errorf("Unable to read response body %v", err)
 	}
@@ -132,12 +110,12 @@ func DocsHelp(ctx DocsCommandContext) error {
 		log.Errorf("Unable to marshal JSON %v", err)
 	}
 
-	debugf("Relevance AI full returned responseBody:\n %v", responseBody)
-	in := responseBody.Output.Answer.Answer
+	debugf("Relevance AI full returned responseBody:\n %s", responseBody.Output.Answer)
+	in := responseBody.Output.Answer
 
 	debugf("Rendering Glamour response for output")
 	out, err := glamour.Render(in, "dark")
-	
+
 	if err != nil{
 		log.Errorf("Error rendering markdown %v", err)
 	}

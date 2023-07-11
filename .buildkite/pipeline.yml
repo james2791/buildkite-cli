@@ -2,13 +2,13 @@ steps:
   - name: "Lint"
     command: ".buildkite/steps/lint.sh"
     plugins:
-      docker#v3.5.0:
+      docker#v5.8.0:
         image: "golang:1.20"
 
   - name: "Test"
     command: "go test -v -failfast ./..."
     plugins:
-      docker-compose#v3.0.0:
+      docker-compose#v4.14.0:
         config: .buildkite/docker-compose.yml
         run: agent
 
@@ -16,32 +16,21 @@ steps:
   - name: "Test with Local Agent"
     command: ".buildkite/steps/run-local.sh"
     plugins:
-      docker-compose#v3.0.0:
+      docker-compose#v4.14.0:
         config: .buildkite/docker-compose.yml
         run: agent
 
   - wait
   - label: ":golang:"
+    command: make build
     plugins:
-      golang-cross-compile#v1.3.0:
-        build: ./cmd/bk
-        import: github.com/buildkite/cli/v2
-        targets:
-          - version: "1.20.0"
-            goos: darwin
-            goarch: amd64
-          - version: "1.20.0"
-            goos: darwin
-            goarch: arm64
-          - version: "1.20.0"
-            goos: linux
-            goarch: amd64
-          - version: "1.20.0"
-            goos: linux
-            goarch: arm64
-          - version: "1.20.0"
-            goos: windows
-            goarch: amd64
+      golang#v2.0.0:
+        version: 1.20.0
+        environment:
+          - RELEVANCE_API_URL
+          - RELEVANCE_PROJECT
+    artifact_paths:
+      - "build/*"
   - block: Release?
   - label: 🚀 Release BK CLI
     command: ".buildkite/steps/release.sh"
