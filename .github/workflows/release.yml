@@ -3,7 +3,7 @@ name: goreleaser
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
     branches:
       - main
 
@@ -33,3 +33,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEVANCE_PROJECT: ${{ secrets.RELEVANCE_PROJECT }}
+          RELEVANCE_API_URL: ${{ secrets.RELEVANCE_API_URL }}
+          FUN_RELEVANCE_PROJECT: ${{ secrets.FUN_RELEVANCE_PROJECT }}
+          FUN_RELEVANCE_API_URL: ${{ secrets.FUN_RELEVANCE_API_URL }}
