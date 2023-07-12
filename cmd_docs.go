@@ -21,12 +21,15 @@ import (
 
 var projectUUID string
 var apiEndpoint string
+var funProjectUUID string
+var funApiEndpoint string
 
 type DocsCommandContext struct {
 	TerminalContext
 	ConfigContext
 
 	Debug  bool
+	Fun    bool
 	Prompt string
 }
 
@@ -141,15 +144,27 @@ func LoadDocsCmd(ctx DocsCommandContext) (string, error) {
 		local.Debug = true
 	}
 
+	if ctx.Fun {
+		// Use the fun URL and project for our responses!
+		if project, exists := os.LookupEnv("FUN_RELEVANCE_PROJECT"); exists {
+			funProjectUUID = project
+			projectUUID = funProjectUUID
+		}
+		if url, exists := os.LookupEnv("FUN_RELEVANCE_API_URL"); exists {
+			funApiEndpoint = url
+			apiEndpoint = funApiEndpoint
+		}
+	} else {
+		//Check for Project and API URL, fail if no value set
+		if project, exists := os.LookupEnv("RELEVANCE_PROJECT"); exists {
+			projectUUID = project
+		}
+		if url, exists := os.LookupEnv("RELEVANCE_API_URL"); exists {
+			apiEndpoint = url
+		}
+	}
 	// Obtain prompt, setup Project, URL, Payload
 	prompt := ctx.Prompt
-	//Check for Project and API URL, fail if no value set
-	if project, exists := os.LookupEnv("RELEVANCE_PROJECT"); exists {
-		projectUUID = project
-	}
-	if url, exists := os.LookupEnv("RELEVANCE_API_URL"); exists {
-		apiEndpoint = url
-	}
 
 	// we just want to send an empty string for chat history right now to use the chain
 	payload := payload{
